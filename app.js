@@ -1,56 +1,79 @@
-const { response } = require('express');
-
 const express= require('express')
-const database= require('./database.json');
+const mongoose= require('mongoose')
 
-const server=express();
 
-server.use(express.json());
+const app =express();
+app.use(express.json());
+mongoose.connect('mongodb+srv://maheen:12345@cluster0.dhik2re.mongodb.net/?retryWrites=true&w=majority',{Usenewurlparser:true});
 
-const obj={
-    name: 'john',
-    age:'30',
-};
 
-const database1 = ['Avengers','superman','batman'];
+//This function will get executed when connection is made and is used to check the connection
+mongoose.connection.on('connected', () =>{
+    console.log('connected to MongoDB');
+});
 
-server.get('/',(req,res) => {
-    res.header('Content-type','text/html');
+//creating collection of database
+const moviesSchema= new mongoose.Schema({
+    name: String,
+    year: Number,
+    rating:  Number
+});
+const movieModel= mongoose.model('movies',moviesSchema);
+
+
+const userSchema= new mongoose.Schema({
+    email:String,
+    name:String,
+    Password:Number
+});
+const userModel= mongoose.model('users',userSchema);
+
+app.post('/users',(req,res)=>{
+    const body=req.body;
+    userModel.create(body);
+    res.status(201);
+    res.send('User created');
+});
+
+
+app.post('/movies',(req,res)=>{
+    const body=req.body;
+    movieModel.create(body);
+    res.status(201);
+    res.send({
+        message:'Movie Created'+ body.name,
+    });
+});
+//here await is used because the above function can take infinite time to load the data so the following function will wait for it
+app.get('/movies',async (req,res)=>{
+    const body=req.body;
+
+    const movies =await movieModel.find(body);
+
     res.status(200);
-    res.send('<h1>HOME ROUTE😉😉</h1>');
+    res.send({
+        message:'Data fetched',
+        data:movies});
 });
-server.get('/data',(req,res) => {
-    res.header('Content-type','applications/json');
+
+app.delete('/movies',async(req,res)=>{
+    const body=req.body;
+    await movieModel.findByIdAndDelete(body.id);
     res.status(200);
-    res.send({message:"Here is the available data",data:database});
+    res.send('Movie deleted');
 });
 
-server.get('/about',(req,res) => {
-    res.send({message:"Here is the available data",data:database});
+//patch function is used for updation
+app.patch('/movies',async(req,res)=>{
+    const body=req.body;
+    const id=body.id;
+    await movieModel.findByIdAndUpdate(id,body);
+    res.status(200);
+    res.send({
+        Message:'Movie Updated'
+    });
 });
 
-server.post('/about',(req,res) => {
-    console.log(req.body);
-    database.push(req.body);
-    res.send("We have new data ");
-});
-server.delete('/about',(req,res) => {
-    const id=req.query.id;
-    console.log(id);
-    const dataindex =  database.findIndex((dataindex) => dataindex.id === parseInt(id));
-    console.log(dataindex);
-    console.log(req.query);
-    res.send('data deleted');
-});
-
-server.get('/movies',(req,res) => {
-    res.send(database1);
-});
-
-server.get('*',(req,res) => {
-    res.send("ERROR 404");
-});
-
-server.listen(3500, ()=>{
-    console.log("Server is running on the port 3500")
+app.listen(2700, ()=>{
+    console.log("Server is running on the port 2700")
 });
