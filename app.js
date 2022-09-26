@@ -20,22 +20,6 @@ const moviesSchema= new mongoose.Schema({
 });
 const movieModel= mongoose.model('movies',moviesSchema);
 
-
-const userSchema= new mongoose.Schema({
-    email:String,
-    name:String,
-    Password:Number
-});
-const userModel= mongoose.model('users',userSchema);
-
-app.post('/users',(req,res)=>{
-    const body=req.body;
-    userModel.create(body);
-    res.status(201);
-    res.send('User created');
-});
-
-
 app.post('/movies',(req,res)=>{
     const body=req.body;
     movieModel.create(body);
